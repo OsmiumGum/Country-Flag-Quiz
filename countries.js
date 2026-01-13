@@ -17,12 +17,20 @@ const countries = [
         flag: "https://flagcdn.com/w320/dz.png"
     },
     {
+        name: "American Samoa",
+        flag: "https://flagcdn.com/w320/as.png"
+    },
+    {
         name: "Andorra",
         flag: "https://flagcdn.com/w320/ad.png"
     },
     {
         name: "Angola",
         flag: "https://flagcdn.com/w320/ao.png"
+    },
+    {
+        name: "Anguilla",
+        flag: "https://flagcdn.com/w320/ai.png"
     },
     {
         name: "Antigua and Barbuda",
@@ -265,8 +273,15 @@ const countries = [
         flag: "https://flagcdn.com/w320/gr.png"
     },
     {
+        name: "Greenland",
+        flag: "https://flagcdn.com/w320/gl.png"
+    },
+    {
         name: "Grenada",
         flag: "https://flagcdn.com/w320/gd.png"
+    },
+        name: "Guam",
+        flag: "https://flagcdn.com/w320/gu.png"
     },
     {
         name: "Guatemala",
@@ -291,6 +306,10 @@ const countries = [
     {
         name: "Honduras",
         flag: "https://flagcdn.com/w320/hn.png"
+    },
+    {
+        name: "Hong Kong",
+        flag: "https://flagcdn.com/w320/hk.png"
     },
     {
         name: "Hungary",
@@ -335,6 +354,10 @@ const countries = [
     {
         name: "Japan",
         flag: "https://flagcdn.com/w320/jp.png"
+    },
+    {
+        name: "Jersey",
+        flag: "https://flagcdn.com/w320/je.png"
     },
     {
         name: "Jordan",
@@ -399,6 +422,10 @@ const countries = [
     {
         name: "Madagascar",
         flag: "https://flagcdn.com/w320/mg.png"
+    },
+    {
+        name: "Macau",
+        flag: "https://flagcdn.com/w320/mo.png"
     },
     {
         name: "Malawi",
@@ -595,6 +622,10 @@ const countries = [
     {
         name: "Saudi Arabia",
         flag: "https://flagcdn.com/w320/sa.png"
+    },
+    {
+        name: "Scotland",
+        flag: "https://flagcdn.com/w320/gb-sct.png"
     },
     {
         name: "Senegal",
