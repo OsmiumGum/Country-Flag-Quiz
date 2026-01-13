@@ -280,6 +280,7 @@ const countries = [
         name: "Grenada",
         flag: "https://flagcdn.com/w320/gd.png"
     },
+    {
         name: "Guam",
         flag: "https://flagcdn.com/w320/gu.png"
     },
