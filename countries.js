@@ -5,7 +5,7 @@ const countries = [
         flag: "https://flagcdn.com/w320/af.png"
     },
     {
-        name: "Åland Islands",
+        name: "Aland Islands",
         flag: "https://flagcdn.com/w320/ax.png"
     },
     {
