@@ -38,6 +38,7 @@ A modern, interactive web-based quiz game to test your knowledge of world flags.
 - **Modal Statistics** - Clean, non-intrusive profile and statistics display
 - **Smooth Animations** - Polished user experience with CSS transitions
 
+
 ## 🚀 Live Demo
 
 [Play the Game Here](https://your-username.github.io/flag-quiz-game)
