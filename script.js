@@ -27,6 +27,21 @@ let isTypingMode = false;
 let filteredCountries = [];
 let selectedSuggestionIndex = -1;
 
+// Game starter functions (for onclick handlers)
+function startGame25() {
+    console.log('25 Questions Mode started');
+    startScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    generateQuiz(false, false); // 25 questions, multiple choice
+}
+
+function startGameUnlimited() {
+    console.log('Unlimited Mode started');
+    startScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    generateQuiz(true, false); // Unlimited, multiple choice
+}
+
 // Function to shuffle an array
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
