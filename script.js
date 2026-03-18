@@ -502,7 +502,7 @@ restartBtn.addEventListener('click', () => {
 
 // Handle image load errors
 flagImage.addEventListener('error', () => {
-    flagImage.src = 'https://via.placeholder.com/320x160?text=Flag+Image+Not+Available';
+    flagImage.src = 'https://th.bing.com/th/id/R.8ac2effe7004fb379ecad626f9729114?rik=9jWMxLdSqJzWwA&riu=http%3a%2f%2fvignette3.wikia.nocookie.net%2fdespicableme%2fimages%2fe%2fef%2fGru_2.jpg%2frevision%2flatest%3fcb%3d20130711231628&ehk=ib1klGWdptxmEyJsyudejq6Xk8vJUoj240E8Y2LGcMI%3d&risl=&pid=ImgRaw&r=0';
 });
 
 // Authentication Event Listeners
@@ -638,6 +638,7 @@ document.addEventListener('DOMContentLoaded', function() {
             userManager.showAuthScreen();
         });
     }
+<<<<<<< HEAD
 
     // Typing mode event listeners
     if (countryInput) {
