@@ -1,21 +1,3 @@
-// DOM Elements
-const startScreen = document.getElementById('start-screen');
-const quizScreen = document.getElementById('quiz-screen');
-const resultsScreen = document.getElementById('results-screen');
-const authScreen = document.getElementById('auth-screen');
-const restartBtn = document.getElementById('restart-btn');
-const flagImage = document.getElementById('flag-image');
-const optionsContainer = document.getElementById('options-container');
-const typingContainer = document.getElementById('typing-container');
-const countryInput = document.getElementById('country-input');
-const submitAnswerBtn = document.getElementById('submit-answer-btn');
-const autocompleteDropdown = document.getElementById('autocomplete-dropdown');
-const currentQuestionSpan = document.getElementById('current-question');
-const scoreSpan = document.getElementById('score');
-const finalScoreSpan = document.getElementById('final-score');
-const feedbackMessage = document.getElementById('feedback-message');
-const progressFill = document.getElementById('progress-fill');
-
 // Game variables
 let quiz = [];
 let currentQuestion = 0;
@@ -26,6 +8,27 @@ let isUnlimitedMode = false;
 let isTypingMode = false;
 let filteredCountries = [];
 let selectedSuggestionIndex = -1;
+
+// DOM Elements (will be populated after DOMContentLoaded)
+let startScreen, quizScreen, resultsScreen, authScreen, restartBtn, flagImage;
+let optionsContainer, typingContainer, countryInput, submitAnswerBtn;
+let autocompleteDropdown, currentQuestionSpan, scoreSpan, finalScoreSpan;
+let feedbackMessage, progressFill;
+
+// Game starter functions (for onclick handlers)
+function startGame25() {
+    console.log('25 Questions Mode started');
+    startScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    generateQuiz(false, false); // 25 questions, multiple choice
+}
+
+function startGameUnlimited() {
+    console.log('Unlimited Mode started');
+    startScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    generateQuiz(true, false); // Unlimited, multiple choice
+}
 
 // Function to shuffle an array
 function shuffleArray(array) {
@@ -502,11 +505,35 @@ restartBtn.addEventListener('click', () => {
 
 // Handle image load errors
 flagImage.addEventListener('error', () => {
-    flagImage.src = 'https://via.placeholder.com/320x160?text=Flag+Image+Not+Available';
+    flagImage.src = 'https://th.bing.com/th/id/R.8ac2effe7004fb379ecad626f9729114?rik=9jWMxLdSqJzWwA&riu=http%3a%2f%2fvignette3.wikia.nocookie.net%2fdespicableme%2fimages%2fe%2fef%2fGru_2.jpg%2frevision%2flatest%3fcb%3d20130711231628&ehk=ib1klGWdptxmEyJsyudejq6Xk8vJUoj240E8Y2LGcMI%3d&risl=&pid=ImgRaw&r=0';
 });
 
 // Authentication Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DOM Elements FIRST
+    startScreen = document.getElementById('start-screen');
+    quizScreen = document.getElementById('quiz-screen');
+    resultsScreen = document.getElementById('results-screen');
+    authScreen = document.getElementById('auth-screen');
+    restartBtn = document.getElementById('restart-btn');
+    flagImage = document.getElementById('flag-image');
+    optionsContainer = document.getElementById('options-container');
+    typingContainer = document.getElementById('typing-container');
+    countryInput = document.getElementById('country-input');
+    submitAnswerBtn = document.getElementById('submit-answer-btn');
+    autocompleteDropdown = document.getElementById('autocomplete-dropdown');
+    currentQuestionSpan = document.getElementById('current-question');
+    scoreSpan = document.getElementById('score');
+    finalScoreSpan = document.getElementById('final-score');
+    feedbackMessage = document.getElementById('feedback-message');
+    progressFill = document.getElementById('progress-fill');
+
+    console.log('DOM elements initialized:', {
+        startScreen: !!startScreen,
+        flagImage: !!flagImage,
+        countries: !!window.countries
+    });
+
     // Auth tab switching
     const loginTab = document.getElementById('login-tab');
     const registerTab = document.getElementById('register-tab');
@@ -638,6 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
             userManager.showAuthScreen();
         });
     }
+<<<<<<< HEAD
 
     // Typing mode event listeners
     if (countryInput) {

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flag Test</title>
+</head>
+<body>
+    <h1>Flag Loading Test</h1>
+    <img id="test-flag" src="https://flagcdn.com/w320/us.png" alt="Test flag" style="width: 200px;">
+    <p>If you see the US flag above, the flag URLs work fine.</p>
+    
+    <script>
+        console.log("Flag test page loaded");
+        
+        // Test loading a flag
+        const img = document.getElementById('test-flag');
+        img.onload = function() {
+            console.log("Flag loaded successfully!");
+        };
+        img.onerror = function() {
+            console.error("Flag failed to load!");
+        };
+    </script>
+</body>
+</html>

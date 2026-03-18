@@ -1,16 +1,17 @@
 # 🌍 Country Flag Quiz Game - Complete Edition
 
-A modern, interactive web-based quiz game to test your knowledge of world flags. Features multiple game modes including an advanced typing mode with smart autocomplete functionality, user accounts, and comprehensive progress tracking.
+A modern, interactive web-based quiz game to test your knowledge of world flags. Features multiple game modes including an advanced typing mode with smart autocomplete functionality, interactive map quiz, user accounts, and comprehensive progress tracking.
 
 ![Flag Quiz Game](https://via.placeholder.com/800x400/36d1dc/ffffff?text=Flag+Quiz+Game)
 
 ## 🚀 Features
 
-### 🎮 **Four Complete Game Modes**
+### 🎮 **Five Complete Game Modes**
 - **25 Questions Mode** - Classic multiple choice quiz with 25 random flags
 - **Unlimited Mode** - Keep playing until you decide to stop with multiple choice
 - **Typing Mode** - Type country names with smart autocomplete (25 questions)  
 - **Unlimited Typing Mode** - Combine typing challenge with endless gameplay
+- **🗺️ Map Quiz Mode** - Click countries on an interactive world map
 
 ### 🔤 **Advanced Typing System**
 - **Smart Autocomplete**: Real-time country suggestions as you type
@@ -18,32 +19,42 @@ A modern, interactive web-based quiz game to test your knowledge of world flags.
 - **Keyboard Navigation**: Use arrow keys ↑↓ to navigate suggestions
 - **Flexible Input**: Case-insensitive, partial matching (e.g., "united" finds "United States")
 - **Multiple Selection Methods**: Click on suggestions or press Enter to select
+- **Dynamic Limits**: 1 char=25 results, 2 chars=20, 3+ chars=15/all matches
 
-### 👤 **User Accounts & Progress Tracking**
+### 🗺️ **Interactive Map Quiz**
+- **OpenStreetMap Integration**: Professional world map with country boundaries
+- **Zoomable Interface**: 1x to 8x zoom for detailed country identification
+- **Enhanced Hitboxes**: Minimum 25px clickable area for small countries
+- **Auto-Advance**: Smooth gameplay without manual "Next" button clicking
+- **Visual Markers**: Special indicators for tiny nations (Monaco, Vatican, etc.)
+- **Smart Timing**: 2s for correct, 3.5s for incorrect answers
+
+### **User Accounts & Progress Tracking**
 - **Firebase Authentication** - Secure email/password registration and login
 - **Personal Statistics** - Track your performance across all game modes
 - **Individual Flag Analytics** - See your success rate for each country's flag
 - **Progress Insights** - Identify which flags you know well and which need practice
 
-### 📊 **Detailed Statistics**
+### **Detailed Statistics**
 - **Overall Performance**: Games played, accuracy percentage, best score
 - **Flag-Specific Data**: Success rate, attempt counts, and performance trends
 - **Sortable Views**: Sort by success rate, alphabetical, or attempt frequency
 - **Visual Indicators**: Color-coded performance levels (Excellent/Good/Average/Needs Practice)
 - **Flag Icons**: Visual flag display in statistics for easy recognition
 
-### 🎨 **Modern Interface**
+### **Modern Interface**
 - **Clean Design** - Beautiful gradient backgrounds and modern styling
 - **Responsive Layout** - Works perfectly on desktop and mobile devices
 - **Modal Statistics** - Clean, non-intrusive profile and statistics display
 - **Smooth Animations** - Polished user experience with CSS transitions
 
 
-## 🚀 Live Demo
+=======
+## Live Demo
 
 [Play the Game Here](https://your-username.github.io/flag-quiz-game)
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### Quick Start (No Account Features)
 1. Download the repository
@@ -70,28 +81,28 @@ A modern, interactive web-based quiz game to test your knowledge of world flags.
    ```
    Then open `http://localhost:8080`
 
-## 🔒 Security Note
+## Security Note
 
 This repository uses a template system for Firebase configuration:
 - `firebase-config.js` - Template with placeholder values (safe to commit)
 - `firebase-config-local.js` - Your actual keys (never commit, in .gitignore)
 - Users must create their own `firebase-config-local.js` with their Firebase project keys
 
-## 💰 Cost
+## Cost
 
 **Completely FREE!** 
 - The game uses Firebase's generous free tier
 - Supports thousands of users and games daily
 - No hidden costs or premium features
 
-## 🏗️ Technologies Used
+## Technologies Used
 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **Backend**: Firebase Authentication & Firestore
 - **Flags**: [Flag CDN](https://flagcdn.com) for high-quality flag images
 - **Hosting**: GitHub Pages compatible
 
-## 📁 File Structure
+## File Structure
 
 ```
 flag-quiz-game/
@@ -106,7 +117,7 @@ flag-quiz-game/
 └── FIREBASE_SETUP.md      # Detailed Firebase setup guide
 ```
 
-## 🎯 How to Play
+## How to Play
 
 1. **Choose Your Mode:**
    - **25 Questions**: Traditional quiz format
@@ -127,7 +138,7 @@ flag-quiz-game/
    - Analyze your performance with detailed breakdowns
    - Use sorting options to find patterns in your knowledge
 
-## 📈 Statistics Features
+## Statistics Features
 
 ### Overview Stats
 - Total games played
@@ -145,31 +156,15 @@ flag-quiz-game/
   - 🟡 Average (40-59%)  
   - 🔴 Needs Practice (<40%)
 
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs or suggest features via GitHub Issues
-- Submit pull requests for improvements
-- Share the game with friends and fellow geography enthusiasts
-
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Flag images provided by [Flag CDN](https://flagcdn.com)
 - Firebase for free backend services
 - The geography and vexillology communities for inspiration
-
-## 🌟 Show Your Support
-
-If you enjoyed this game, please:
-- ⭐ Star this repository
-- 🍴 Fork it to create your own version
-- 📢 Share it with friends who love geography
-- 🐛 Report any bugs you find
-
 ---
 
 **Made with ❤️ for geography enthusiasts worldwide!**

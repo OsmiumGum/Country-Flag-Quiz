@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Debug Test</h1>
+    <button onclick="testFunction()">Test Function</button>
+    <div id="output"></div>
+    
+    <script src="countries.js"></script>
+    <script>
+        function testFunction() {
+            console.log("Test function called");
+            console.log("Countries array length:", countries ? countries.length : "undefined");
+            
+            if (countries && countries.length > 0) {
+                console.log("First country:", countries[0]);
+                document.getElementById('output').innerHTML = 
+                    '<p>Countries loaded: ' + countries.length + '</p>' +
+                    '<p>First country: ' + countries[0].name + '</p>' +
+                    '<img src="' + countries[0].flag + '" style="width:200px;">';
+            } else {
+                document.getElementById('output').innerHTML = '<p style="color:red;">Countries array not loaded!</p>';
+            }
+        }
+    </script>
+</body>
+</html>
