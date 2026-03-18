@@ -561,6 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const startUnlimitedBtn = document.getElementById('start-unlimited-btn');
     const startTypingBtn = document.getElementById('start-typing-btn');
     const startUnlimitedTypingBtn = document.getElementById('start-unlimited-typing-btn');
+    const startMapQuizBtn = document.getElementById('start-map-quiz-btn');
     const endGameBtn = document.getElementById('end-game-btn');
     const showLoginBtn = document.getElementById('show-login-btn');
 
@@ -569,6 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startUnlimitedBtn: !!startUnlimitedBtn,
         startTypingBtn: !!startTypingBtn,
         startUnlimitedTypingBtn: !!startUnlimitedTypingBtn,
+        startMapQuizBtn: !!startMapQuizBtn,
         endGameBtn: !!endGameBtn,
         showLoginBtn: !!showLoginBtn
     });
@@ -615,6 +617,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } else {
         console.error('start-unlimited-typing-btn not found');
+    }
+
+    if (startMapQuizBtn) {
+        startMapQuizBtn.addEventListener('click', () => {
+            console.log('Map Quiz Mode button clicked');
+            // Open the map quiz in a new window/tab
+            window.open('map-quiz.html', '_blank', 'width=1400,height=900,resizable=yes,scrollbars=yes');
+        });
+    } else {
+        console.error('start-map-quiz-btn not found');
     }
 
     if (endGameBtn) {
