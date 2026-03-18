@@ -1,18 +1,27 @@
-# 🌍 Flag Quiz Game - Enhanced Edition
+# 🌍 Country Flag Quiz Game - Complete Edition
 
-A fun and interactive quiz game to test your knowledge of country flags around the world, now with **user accounts, detailed statistics tracking, and multiple game modes**!
+A modern, interactive web-based quiz game to test your knowledge of world flags. Features multiple game modes including an advanced typing mode with smart autocomplete functionality, user accounts, and comprehensive progress tracking.
 
 ![Flag Quiz Game](https://via.placeholder.com/800x400/36d1dc/ffffff?text=Flag+Quiz+Game)
 
-## 🌟 Features
+## 🚀 Features
 
-### 🎮 **Game Modes**
-- **25 Questions Mode** - Traditional quiz with 25 random flags
-- **Unlimited Mode** - Keep playing until you decide to stop with the "End Game" button
+### 🎮 **Four Complete Game Modes**
+- **25 Questions Mode** - Classic multiple choice quiz with 25 random flags
+- **Unlimited Mode** - Keep playing until you decide to stop with multiple choice
+- **Typing Mode** - Type country names with smart autocomplete (25 questions)  
+- **Unlimited Typing Mode** - Combine typing challenge with endless gameplay
+
+### 🔤 **Advanced Typing System**
+- **Smart Autocomplete**: Real-time country suggestions as you type
+- **Intelligent Filtering**: Type "C" to see Canada, China, Croatia, etc.
+- **Keyboard Navigation**: Use arrow keys ↑↓ to navigate suggestions
+- **Flexible Input**: Case-insensitive, partial matching (e.g., "united" finds "United States")
+- **Multiple Selection Methods**: Click on suggestions or press Enter to select
 
 ### 👤 **User Accounts & Progress Tracking**
 - **Firebase Authentication** - Secure email/password registration and login
-- **Personal Statistics** - Track your performance over time
+- **Personal Statistics** - Track your performance across all game modes
 - **Individual Flag Analytics** - See your success rate for each country's flag
 - **Progress Insights** - Identify which flags you know well and which need practice
 

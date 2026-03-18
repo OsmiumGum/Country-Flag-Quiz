@@ -72,8 +72,10 @@
                 <p>Test your knowledge of country flags around the world!</p>
                 <p>Choose your game mode:</p>
                 <div class="game-mode-selection">
-                    <button id="start-25-btn" class="game-mode-btn" onclick="startGame25()">25 Questions</button>
-                    <button id="start-unlimited-btn" class="game-mode-btn" onclick="startGameUnlimited()">Unlimited Mode</button>
+                    <button id="start-25-btn" class="game-mode-btn">25 Questions</button>
+                    <button id="start-unlimited-btn" class="game-mode-btn">Unlimited Mode</button>
+                    <button id="start-typing-btn" class="game-mode-btn">Typing Mode</button>
+                    <button id="start-unlimited-typing-btn" class="game-mode-btn">Unlimited Typing</button>
                 </div>
             </div>
 
@@ -95,17 +97,29 @@
                 </div>
                 
                 <div class="question">
-                    <p>Which country does this flag belong to?</p>
+                    <p id="question-text">Which country does this flag belong to?</p>
+                    <p id="mode-indicator" class="mode-indicator"></p>
                 </div>
                 
                 <div class="options-container" id="options-container">
                     <!-- Options will be generated dynamically here -->
                 </div>
+                
+                <div class="typing-container hidden" id="typing-container">
+                    <div class="typing-input-wrapper">
+                        <input type="text" id="country-input" placeholder="Type the country name..." autocomplete="off">
+                        <button id="submit-answer-btn" class="submit-btn" disabled>Submit</button>
+                        <div class="autocomplete-dropdown hidden" id="autocomplete-dropdown">
+                            <!-- Autocomplete suggestions will appear here -->
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="results-screen" class="hidden">
                 <h2>Quiz Results</h2>
-                <p>Your final score: <span id="final-score">0</span> out of 25</p>
+                <div id="game-mode-result" class="game-mode-result"></div>
+                <p>Your final score: <span id="final-score">0</span> out of <span id="final-total">25</span></p>
                 <div id="feedback-message"></div>
                 <button id="restart-btn">Play Again</button>
             </div>
