@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Flag Quiz</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-wrapper">
+            <h1>Country Flag Quiz</h1>
+            
+            <!-- Authentication Screen -->
+            <div id="auth-screen" class="hidden">
+                <div class="auth-container">
+                    <div class="auth-tabs">
+                        <button id="login-tab" class="auth-tab active">Login</button>
+                        <button id="register-tab" class="auth-tab">Register</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div id="login-form" class="auth-form active">
+                        <h3>Login to Your Account</h3>
+                        <p>Track your progress and see which flags you've mastered!</p>
+                        <form id="login-form-element">
+                            <div class="input-group">
+                                <input type="email" id="login-email" placeholder="Email" required>
+                            </div>
+                            <div class="input-group">
+                                <input type="password" id="login-password" placeholder="Password" required>
+                            </div>
+                            <button type="submit" class="auth-btn">Login</button>
+                        </form>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="register-form" class="auth-form">
+                        <h3>Create New Account</h3>
+                        <p>Join to track your flag knowledge and see your improvement!</p>
+                        <form id="register-form-element">
+                            <div class="input-group">
+                                <input type="text" id="register-username" placeholder="Username" required>
+                            </div>
+                            <div class="input-group">
+                                <input type="email" id="register-email" placeholder="Email" required>
+                            </div>
+                            <div class="input-group">
+                                <input type="password" id="register-password" placeholder="Password (min 6 characters)" required minlength="6">
+                            </div>
+                            <button type="submit" class="auth-btn">Create Account</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Info Bar (shown when logged in) -->
+            <div id="user-info" class="user-info hidden"></div>
+            
+            <!-- Login/Logout access for non-logged in users -->
+            <div id="login-access" class="login-access hidden">
+                <p>Want to track your progress? <button id="show-login-btn" class="link-btn">Login or Create Account</button></p>
+            </div>
+            
+            <div id="start-screen" class="active">
+                <p>Test your knowledge of country flags around the world!</p>
+                <p>Choose your game mode:</p>
+                <div class="game-mode-selection">
+                    <button id="start-25-btn" class="game-mode-btn">25 Questions</button>
+                    <button id="start-unlimited-btn" class="game-mode-btn">Unlimited Mode</button>
+                    <button id="start-typing-btn" class="game-mode-btn">Typing Mode</button>
+                    <button id="start-unlimited-typing-btn" class="game-mode-btn">Unlimited Typing</button>
+                    <button id="start-map-quiz-btn" class="game-mode-btn">🗺️ Map Quiz</button>
+                </div>
+            </div>
+
+            <div id="quiz-screen" class="hidden">
+                <div class="progress-container">
+                    <div class="progress-text">Question <span id="current-question">1</span><span id="total-questions-display">/25</span></div>
+                    <div class="progress-bar">
+                        <div id="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="quiz-controls">
+                    <div id="score-display">Score: <span id="score">0</span></div>
+                    <button id="end-game-btn" class="end-game-btn hidden">End Game</button>
+                </div>
+
+                <div class="flag-container">
+                    <img id="flag-image" src="" alt="Country flag">
+                </div>
+                
+                <div class="question">
+                    <p id="question-text">Which country does this flag belong to?</p>
+                    <p id="mode-indicator" class="mode-indicator"></p>
+                </div>
+                
+                <div class="options-container" id="options-container">
+                    <!-- Options will be generated dynamically here -->
+                </div>
+                
+                <div class="typing-container hidden" id="typing-container">
+                    <div class="typing-input-wrapper">
+                        <input type="text" id="country-input" placeholder="Type the country name..." autocomplete="off">
+                        <button id="submit-answer-btn" class="submit-btn" disabled>Submit</button>
+                        <div class="autocomplete-dropdown hidden" id="autocomplete-dropdown">
+                            <!-- Autocomplete suggestions will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results-screen" class="hidden">
+                <h2>Quiz Results</h2>
+                <div id="game-mode-result" class="game-mode-result"></div>
+                <p>Your final score: <span id="final-score">0</span> out of <span id="final-total">25</span></p>
+                <div id="feedback-message"></div>
+                <button id="restart-btn">Play Again</button>
+            </div>
+
+            <!-- Simple Profile Modal -->
+            <div id="profile-modal" class="modal hidden">
+                <div class="modal-overlay" onclick="closeSimpleProfile()"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Your Statistics</h2>
+                        <button onclick="closeSimpleProfile()" class="modal-close">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="simple-profile-stats">
+                            <!-- Statistics will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="countries.js"></script>
+    <script src="firebase-config-env.js"></script>
+    <script src="user-manager.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

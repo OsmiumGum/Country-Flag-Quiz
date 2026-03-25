@@ -483,7 +483,8 @@
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap contributors | Enhanced for Flag Quiz',
                     maxZoom: 2,
-                    minZoom: 2
+                    minZoom: 2,
+                    noWrap: true
                 }).addTo(map);
                 
                 // Load country boundaries with enhanced hitboxes
