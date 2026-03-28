@@ -564,4 +564,17 @@ function startGameUnlimited() {
     } else {
         console.error('Could not find start-screen or quiz-screen elements');
     }
+
+function startGameGeoGusser() {
+    console.log('startGameGeoGusser called');
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    
+    if (startScreen && quizScreen) {
+        startScreen.classList.add('hidden');
+        quizScreen.classList.remove('hidden');
+        generateQuiz(true);
+    } else {
+        console.error('Could not find start-screen or quiz-screen elements');
+    }
 }
