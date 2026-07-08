@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flag Performance</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Match the theme the player already chose on the main page.
+        try {
+            var savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {}
+    </script>
+    <style>
+        .detail-page {
+            width: min(880px, 100%);
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .detail-header h1 {
+            margin: 2px 0 4px;
+            text-align: left;
+            font-size: 1.6rem;
+        }
+        .detail-header p {
+            margin: 0;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+        .detail-header-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+        .icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            margin: 0;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+        .icon-btn:hover {
+            background: var(--option-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px var(--shadow-light);
+        }
+        .icon-btn.spinning svg,
+        .icon-btn.spinning {
+            animation: iconSpin 0.6s ease;
+        }
+        @keyframes iconSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Summary strip */
+        .detail-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .detail-summary-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+        .detail-summary-label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .detail-summary-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        /* Focus panel — the answer to "what should I practice" */
+        .focus-panel {
+            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(220,53,69,0.07), rgba(240,173,78,0.05));
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+        .focus-panel.all-clear {
+            background: var(--secondary-bg);
+        }
+        .focus-panel-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .focus-panel-head h2 {
+            margin: 0;
+            text-align: left;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+        .focus-panel-sub {
+            margin: 2px 0 0;
+            text-align: left;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+        .focus-scroller {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
+        }
+        .focus-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            background: var(--wrapper-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 6px 14px 6px 6px;
+            margin: 0;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .focus-chip:hover {
+            background: var(--wrapper-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px var(--shadow-light);
+        }
+        .focus-chip img {
+            width: 28px;
+            height: 20px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .focus-chip-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .focus-chip-pct {
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+        .focus-empty {
+            text-align: center;
+            padding: 10px 6px 4px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Controls row: search + filter pills + sort */
+        .detail-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .filter-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .filter-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            padding: 7px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .filter-pill:hover {
+            background: var(--option-hover);
+            transform: none;
+            box-shadow: none;
+        }
+        .filter-pill .pill-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: rgba(0,0,0,0.08);
+            font-size: 0.72rem;
+        }
+        .filter-pill.active {
+            color: white;
+            border-color: transparent;
+            background: var(--pill-color, var(--primary-color));
+        }
+        .filter-pill.active .pill-count {
+            background: rgba(255,255,255,0.28);
+        }
+        .filter-pill.active:hover {
+            background: var(--pill-color, var(--primary-color));
+        }
+
+        .detail-tools {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .detail-search {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-light);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: inherit;
+            min-width: 160px;
+        }
+        .detail-search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .detail-sort {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-light);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* Flag list */
+        .detail-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 10px;
+        }
+        .detail-flag-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--wrapper-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .detail-flag-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .detail-flag-top img {
+            width: 34px;
+            height: 24px;
+            object-fit: cover;
+            border-radius: 5px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .detail-flag-name {
+            flex: 1;
+            min-width: 0;
+            font-weight: 600;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+        .detail-flag-percentage {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--detail-accent, var(--text-primary));
+            flex-shrink: 0;
+        }
+        .detail-bar {
+            height: 6px;
+            border-radius: 999px;
+            background: var(--option-border);
+            overflow: hidden;
+        }
+        .detail-bar-fill {
+            display: block;
+            height: 100%;
+            border-radius: 999px;
+            background: var(--detail-accent, var(--primary-color));
+        }
+        .detail-flag-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .detail-flag-attempts {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+        }
+        .detail-flag-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--detail-accent, var(--text-secondary));
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .detail-empty {
+            text-align: center;
+            padding: 34px 16px;
+            color: var(--text-secondary);
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+        }
+
+        @media (max-width: 700px) {
+            .detail-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 600px) {
+            .detail-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .detail-header-actions {
+                justify-content: flex-end;
+            }
+            .detail-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .detail-tools {
+                justify-content: stretch;
+            }
+            .detail-search,
+            .detail-sort {
+                flex: 1;
+            }
+            .detail-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-wrapper detail-page">
+            <div class="detail-header">
+                <div>
+                    <p class="profile-eyebrow">Detailed statistics</p>
+                    <h1>Flag performance</h1>
+                    <p>See exactly which flags need more practice.</p>
+                </div>
+                <div class="detail-header-actions">
+                    <button id="refresh-detail-btn" class="icon-btn" aria-label="Refresh" title="Refresh">⟳</button>
+                    <button id="close-detail-btn" class="icon-btn" aria-label="Close window" title="Close">✕</button>
+                </div>
+            </div>
+
+            <div class="detail-summary" id="detail-summary">
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Flags seen</div>
+                    <div class="detail-summary-value" id="summary-flags">0</div>
+                </div>
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Attempts</div>
+                    <div class="detail-summary-value" id="summary-attempts">0</div>
+                </div>
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Correct</div>
+                    <div class="detail-summary-value" id="summary-correct">0</div>
+                </div>
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Accuracy</div>
+                    <div class="detail-summary-value" id="summary-accuracy">0%</div>
+                </div>
+            </div>
+
+            <div class="focus-panel hidden" id="focus-panel">
+                <div class="focus-panel-head">
+                    <div>
+                        <h2>Focus on these flags</h2>
+                        <p class="focus-panel-sub" id="focus-panel-sub">Your lowest-scoring flags, worst first.</p>
+                    </div>
+                </div>
+                <div class="focus-scroller" id="focus-scroller"></div>
+            </div>
+
+            <div class="detail-controls hidden">
+                <div class="filter-pills" id="filter-pills">
+                    <button class="filter-pill active" data-filter="all" style="--pill-color:#5b86e5">All <span class="pill-count" id="count-all">0</span></button>
+                    <button class="filter-pill" data-filter="needs-work" style="--pill-color:#dc3545">Needs work <span class="pill-count" id="count-needs-work">0</span></button>
+                    <button class="filter-pill" data-filter="practicing" style="--pill-color:#f0ad4e">Practicing <span class="pill-count" id="count-practicing">0</span></button>
+                    <button class="filter-pill" data-filter="strong" style="--pill-color:#28a745">Strong <span class="pill-count" id="count-strong">0</span></button>
+                    <button class="filter-pill" data-filter="excellent" style="--pill-color:#1f7a3a">Excellent <span class="pill-count" id="count-excellent">0</span></button>
+                </div>
+                <div class="detail-tools">
+                    <input type="text" id="detail-search" class="detail-search" placeholder="Search a country…">
+                    <select id="detail-sort" class="detail-sort">
+                        <option value="percentage-asc">Lowest %</option>
+                        <option value="percentage-desc">Highest %</option>
+                        <option value="attempts-desc">Most attempts</option>
+                        <option value="attempts-asc">Fewest attempts</option>
+                        <option value="alphabetical">A–Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="detail-content" class="detail-list">
+                <div class="detail-empty">Loading your detailed statistics...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="countries.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="detailed-stats.js"></script>
+</body>
+</html>

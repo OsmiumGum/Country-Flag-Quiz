@@ -9,8 +9,10 @@ if (!fs.existsSync('dist')) {
 // Copy all files to dist
 const filesToCopy = [
     'index.html',
+    'detailed-stats.html',
     'styles.css',
     'script.js',
+    'detailed-stats.js',
     'user-manager.js', 
     'countries.js',
     'server.js'
