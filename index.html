@@ -17,11 +17,14 @@
 <body>
     <div class="container">
         <div class="quiz-wrapper">
-            <div class="header-controls">
+            <div class="header-controls top-nav">
                 <h1>Country Flag Quiz</h1>
-                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
-                    <span class="theme-icon">🌙</span>
-                </button>
+                <div class="nav-actions">
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <div id="user-info" class="user-info hidden"></div>
+                </div>
             </div>
             
             <!-- Authentication Screen -->
@@ -67,9 +70,6 @@
                 </div>
             </div>
 
-            <!-- User Info Bar (shown when logged in) -->
-            <div id="user-info" class="user-info hidden"></div>
-            
             <!-- Login/Logout access for non-logged in users -->
             <div id="login-access" class="login-access hidden">
                 <p>Want to track your progress? <button id="show-login-btn" class="link-btn">Login or Create Account</button></p>
@@ -132,17 +132,20 @@
                 <button id="restart-btn">Play Again</button>
             </div>
 
-            <!-- Simple Profile Modal -->
-            <div id="profile-modal" class="modal hidden">
-                <div class="modal-overlay" onclick="closeSimpleProfile()"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Your Statistics</h2>
-                        <button onclick="closeSimpleProfile()" class="modal-close">×</button>
+            <!-- Profile Drawer -->
+            <div id="profile-drawer" class="profile-drawer hidden" aria-hidden="true">
+                <div class="profile-drawer-overlay" onclick="closeProfileDrawer()"></div>
+                <div class="profile-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="profile-drawer-title">
+                    <div class="profile-drawer-header">
+                        <div>
+                            <p class="profile-eyebrow">Player profile</p>
+                            <h2 id="profile-drawer-title">Your Stats</h2>
+                        </div>
+                        <button onclick="closeProfileDrawer()" class="drawer-close" aria-label="Close profile">×</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="profile-drawer-body">
                         <div id="simple-profile-stats">
-                            <!-- Statistics will be populated by JavaScript -->
+                            <!-- Profile content will be populated by JavaScript -->
                         </div>
                     </div>
                 </div>
@@ -150,9 +153,17 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <script src="assets/js/countries.js"></script>
     <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/user-manager.js"></script>
     <script src="assets/js/script.js"></script>
+=======
+    <script src="countries.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="user-manager.js"></script>
+    <script src="script.js"></script>
+>>>>>>> origin/main
 </body>
 </html>

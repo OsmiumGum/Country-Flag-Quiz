@@ -68,6 +68,8 @@ class UserManager {
                 totalCorrect: 0,
                 totalQuestions: 0,
                 bestScore: 0,
+                overallPercentage: 0,
+                profilePicture: null,
                 currentStreak: 0,
                 bestStreak: 0
             });
@@ -95,6 +97,8 @@ class UserManager {
     // Logout user
     async logout() {
         try {
+            this.closeProfileDrawer();
+            this.closeUserMenu();
             await auth.signOut();
             this.showMessage('Logged out successfully!', 'success');
         } catch (error) {
@@ -107,13 +111,12 @@ class UserManager {
         if (!this.currentUser) return;
 
         try {
-            // Load user profile
-            const userDoc = await db.collection('users').doc(this.currentUser.uid).get();
+            const userRef = db.collection('users').doc(this.currentUser.uid);
+            const userDoc = await userRef.get();
             this.userProfile = userDoc.exists ? userDoc.data() : null;
 
             // Load flag statistics
-            const flagStatsSnapshot = await db.collection('users')
-                .doc(this.currentUser.uid)
+            const flagStatsSnapshot = await userRef
                 .collection('flagStats')
                 .get();
 
@@ -121,6 +124,23 @@ class UserManager {
             flagStatsSnapshot.forEach(doc => {
                 this.userStats[doc.id] = doc.data();
             });
+
+            // Load recent game history for charts
+            try {
+                const historySnapshot = await userRef
+                    .collection('gameHistory')
+                    .orderBy('playedAt', 'desc')
+                    .limit(12)
+                    .get();
+
+                this.gameHistory = [];
+                historySnapshot.forEach(doc => {
+                    this.gameHistory.push(doc.data());
+                });
+            } catch (historyError) {
+                console.warn('Game history not available yet:', historyError);
+                this.gameHistory = [];
+            }
 
             this.updateUserDisplay();
         } catch (error) {
@@ -184,29 +204,41 @@ class UserManager {
     }
 
     // Update game completion
-    async updateGameCompletion(score, totalQuestions) {
+    async updateGameCompletion(score, totalQuestions, gameMode = 'Unknown Mode') {
         if (!this.currentUser) return;
 
         const userId = this.currentUser.uid;
         const userRef = db.collection('users').doc(userId);
+        const historyRef = userRef.collection('gameHistory').doc();
 
         try {
             const userDoc = await userRef.get();
-            const currentData = userDoc.data();
+            const currentData = userDoc.data() || {};
             
             const newTotalGames = (currentData.totalGames || 0) + 1;
             const newTotalCorrect = (currentData.totalCorrect || 0) + score;
             const newTotalQuestions = (currentData.totalQuestions || 0) + totalQuestions;
             const newBestScore = Math.max(currentData.bestScore || 0, score);
-            
-            await userRef.update({
+            const overallPercentage = newTotalQuestions > 0 ? Math.round((newTotalCorrect / newTotalQuestions) * 100) : 0;
+            const gamePercentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+
+            const batch = db.batch();
+            batch.update(userRef, {
                 totalGames: newTotalGames,
                 totalCorrect: newTotalCorrect,
                 totalQuestions: newTotalQuestions,
                 bestScore: newBestScore,
                 lastPlayed: firebase.firestore.FieldValue.serverTimestamp(),
-                overallPercentage: Math.round((newTotalCorrect / newTotalQuestions) * 100)
+                overallPercentage: overallPercentage
             });
+            batch.set(historyRef, {
+                score: score,
+                totalQuestions: totalQuestions,
+                percentage: gamePercentage,
+                mode: gameMode,
+                playedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await batch.commit();
 
             // Update local profile
             this.userProfile = {
@@ -215,8 +247,14 @@ class UserManager {
                 totalCorrect: newTotalCorrect,
                 totalQuestions: newTotalQuestions,
                 bestScore: newBestScore,
-                overallPercentage: Math.round((newTotalCorrect / newTotalQuestions) * 100)
+                overallPercentage: overallPercentage
             };
+            this.gameHistory = [{
+                score,
+                totalQuestions,
+                percentage: gamePercentage,
+                mode: gameMode
+            }, ...(this.gameHistory || [])].slice(0, 12);
 
         } catch (error) {
             console.error('Error updating game completion:', error);
@@ -256,7 +294,7 @@ class UserManager {
         document.getElementById('quiz-screen').classList.add('hidden');
         document.getElementById('results-screen').classList.add('hidden');
         document.getElementById('login-access').classList.add('hidden');
-        this.closeProfile(); // Close profile modal if open
+        this.closeProfileDrawer();
     }
 
     // Show game screens (hide auth)
@@ -279,21 +317,29 @@ class UserManager {
         const loginAccess = document.getElementById('login-access');
         
         if (this.currentUser && userInfo) {
-            userInfo.classList.remove('hidden'); // Make user info visible
-            loginAccess.classList.add('hidden'); // Hide login access
+            userInfo.classList.remove('hidden');
+            loginAccess.classList.add('hidden');
             userInfo.innerHTML = `
                 <div class="user-display">
-                    <span>Welcome, ${this.currentUser.displayName || this.currentUser.email}!</span>
-                    <button onclick="showSimpleProfile()" class="profile-btn">Profile</button>
-                    <button id="logout-btn" class="logout-btn">Logout</button>
+                    <button id="avatar-button" class="avatar-button" aria-label="Open profile"></button>
                 </div>
             `;
 
-            // Add event listeners
-            document.getElementById('logout-btn').addEventListener('click', () => this.logout());
+            this.renderAvatarButton();
+
+            const avatarButton = document.getElementById('avatar-button');
+            if (avatarButton) {
+                avatarButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.openProfileDrawer();
+                });
+            }
         } else {
-            if (userInfo) userInfo.classList.add('hidden'); // Hide user info when not logged in
-            if (loginAccess) loginAccess.classList.remove('hidden'); // Show login access
+            if (userInfo) {
+                userInfo.classList.add('hidden');
+                userInfo.innerHTML = '';
+            }
+            if (loginAccess) loginAccess.classList.remove('hidden');
         }
     }
 
@@ -305,53 +351,326 @@ class UserManager {
             return;
         }
 
-        if (!this.userProfile) {
-            profileStats.innerHTML = '<div class="no-data">No statistics available. Play some games first!</div>';
+        if (!this.currentUser) {
+            profileStats.innerHTML = '<div class="profile-empty-state">Sign in to see your profile.</div>';
             return;
         }
 
         const totalFlagsAttempted = Object.keys(this.userStats || {}).length;
+        const totalGames = this.userProfile?.totalGames || 0;
+        const overallPercentage = this.userProfile?.overallPercentage || 0;
+        const bestScore = this.userProfile?.bestScore || 0;
+        const averageScore = totalGames > 0 ? Math.round((this.userProfile.totalCorrect || 0) / totalGames) : 0;
+        const streak = this.userProfile?.currentStreak || 0;
+        const recentGames = (this.gameHistory || []).slice(0, 6);
 
-        const statsHTML = 
-            '<div class="simple-stats">' +
-                '<div class="stat-row">' +
-                    '<strong>Games Played:</strong> <span>' + (this.userProfile.totalGames || 0) + '</span>' +
-                '</div>' +
-                '<div class="stat-row">' +
-                    '<strong>Overall Accuracy:</strong> <span>' + (this.userProfile.overallPercentage || 0) + '%</span>' +
-                '</div>' +
-                '<div class="stat-row">' +
-                    '<strong>Best Score:</strong> <span>' + (this.userProfile.bestScore || 0) + '</span>' +
-                '</div>' +
-                '<div class="stat-row">' +
-                    '<strong>Flags Attempted:</strong> <span>' + totalFlagsAttempted + '</span>' +
-                '</div>' +
-            '</div>' +
-            '<div class="detailed-stats-section">' +
-                '<div class="stats-controls">' +
-                    '<button id="show-detailed-stats-btn" class="stats-btn">Show Detailed Flag Statistics</button>' +
-                '</div>' +
-                '<div id="detailed-stats-container" class="hidden">' +
-                    '<div class="sort-controls">' +
-                        '<label>Sort by: </label>' +
-                        '<select id="sort-dropdown">' +
-                            '<option value="percentage-desc">Best Performance (% then attempts)</option>' +
-                            '<option value="attempts-desc">Most Practiced (attempts then %)</option>' +
-                            '<option value="percentage-asc">Needs Practice (lowest % first)</option>' +
-                            '<option value="alphabetical">Country Name (A-Z)</option>' +
-                            '<option value="attempts-asc">Least Practiced (fewest attempts)</option>' +
-                        '</select>' +
-                    '</div>' +
-                    '<div id="all-flags-list" class="all-flags-container">' +
-                        '<!-- Will be populated by JavaScript -->' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
+        const profileAvatarMarkup = this.getAvatarMarkup('profile-avatar-large');
+        const profileTitle = this.currentUser.displayName || this.currentUser.email || 'Player';
 
-        profileStats.innerHTML = statsHTML;
+        profileStats.innerHTML = `
+            <div class="profile-shell">
+                <section class="profile-hero">
+                    <div class="profile-hero-top">
+                        ${profileAvatarMarkup}
+                        <div class="profile-meta">
+                            <h3>${profileTitle}</h3>
+                            <p>${this.currentUser.email || ''}</p>
+                        </div>
+                    </div>
+                    <div class="profile-badges">
+                        <span class="profile-badge">${totalGames} games played</span>
+                        <span class="profile-badge">${totalFlagsAttempted} flags attempted</span>
+                        <span class="profile-badge">${streak} streak</span>
+                    </div>
+                </section>
 
-        // Add event listeners for detailed stats
-        this.attachDetailedStatsEventListeners();
+                <section class="profile-section">
+                    <h3>Quick stats</h3>
+                    <div class="profile-stat-grid">
+                        <div class="profile-stat-card">
+                            <div class="profile-stat-label">Overall accuracy</div>
+                            <div class="profile-stat-value">${overallPercentage}%</div>
+                            <div class="profile-stat-subtext">Across all saved games</div>
+                        </div>
+                        <div class="profile-stat-card">
+                            <div class="profile-stat-label">Best score</div>
+                            <div class="profile-stat-value">${bestScore}</div>
+                            <div class="profile-stat-subtext">Best single-game score</div>
+                        </div>
+                        <div class="profile-stat-card">
+                            <div class="profile-stat-label">Average score</div>
+                            <div class="profile-stat-value">${averageScore}</div>
+                            <div class="profile-stat-subtext">Average correct answers per game</div>
+                        </div>
+                        <div class="profile-stat-card">
+                            <div class="profile-stat-label">Flags attempted</div>
+                            <div class="profile-stat-value">${totalFlagsAttempted}</div>
+                            <div class="profile-stat-subtext">Unique flags in your history</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="profile-section">
+                    <h3>Performance charts</h3>
+                    <div class="profile-chart-grid">
+                        <div class="profile-chart-card">
+                            <h4>Accuracy trend</h4>
+                            <div class="chart-canvas-wrap"><canvas id="profile-trend-chart"></canvas></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="profile-section">
+                    <h3>Your recent games</h3>
+                    <div class="profile-chart-card">
+                        ${recentGames.length > 0 ? `<div class="practice-preview-grid">
+                            ${recentGames.map((game, index) => `
+                                <div class="practice-preview-item">
+                                    <div class="practice-preview-info">
+                                        <div class="profile-stat-label">#${index + 1}</div>
+                                        <div class="practice-preview-name">${game.mode || 'Game'} · ${game.score}/${game.totalQuestions}</div>
+                                    </div>
+                                    <div class="practice-preview-score">${game.percentage || 0}%</div>
+                                </div>
+                            `).join('')}
+                        </div>` : '<div class="profile-empty-state">Your trend chart will appear here after a few games.</div>'}
+                    </div>
+                </section>
+
+                <section class="profile-section">
+                    <div class="avatar-picker-header">
+                        <div>
+                            <h3>Select profile flag</h3>
+                            <p>Pick any country flag to use as your avatar.</p>
+                        </div>
+                    </div>
+                    <div id="avatar-picker-grid" class="avatar-picker-grid"></div>
+                </section>
+
+                <div class="profile-drawer-footer">
+                    <button class="menu-action-btn profile-btn profile-detail-btn" id="open-detail-stats-btn">
+                        <span class="profile-btn-text">
+                            <span class="profile-btn-label">Detailed statistics</span>
+                            <span class="profile-btn-subtext">All-time flag attempts</span>
+                        </span>
+                    </button>
+                    <button class="menu-action-btn logout-btn profile-logout-btn" id="profile-logout-btn">Logout</button>
+                </div>
+            </div>
+        `;
+
+        this.renderAvatarPicker();
+        this.renderProfileCharts();
+
+        const profileDetailBtn = document.getElementById('open-detail-stats-btn');
+        const profileLogoutBtn = document.getElementById('profile-logout-btn');
+        if (profileDetailBtn) {
+            profileDetailBtn.addEventListener('click', () => this.openDetailedStatsWindow());
+        }
+        if (profileLogoutBtn) {
+            profileLogoutBtn.addEventListener('click', () => this.logout());
+        }
+    }
+
+    getAvatarMarkup(className = '') {
+        const displayName = this.currentUser?.displayName || this.currentUser?.email || 'Player';
+        const initials = displayName
+            .split(' ')
+            .map(part => part.charAt(0))
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
+        const profilePicture = this.userProfile?.profilePicture;
+
+        if (profilePicture) {
+            const flagCode = String(profilePicture).toLowerCase();
+            return `
+                <div class="${className}">
+                    <img class="avatar-image" src="https://flagcdn.com/w80/${flagCode}.png" alt="Selected profile flag">
+                </div>
+            `;
+        }
+
+        return `<div class="${className}"><span class="avatar-fallback">${initials}</span></div>`;
+    }
+
+    renderAvatarButton() {
+        const avatarButton = document.getElementById('avatar-button');
+        if (!avatarButton) return;
+
+        const hasProfilePicture = Boolean(this.userProfile?.profilePicture);
+        avatarButton.classList.toggle('has-profile-picture', hasProfilePicture);
+        avatarButton.innerHTML = this.getAvatarMarkup('avatar-button-content');
+        avatarButton.title = 'Open profile menu';
+    }
+
+    renderUserMenu() {
+        const userMenu = document.getElementById('user-menu');
+        if (!userMenu || !this.currentUser) return;
+
+        const displayName = this.currentUser.displayName || this.currentUser.email || 'Player';
+        userMenu.innerHTML = `
+            <div class="user-menu-header">
+                <span class="user-menu-name">${displayName}</span>
+                <span class="user-menu-email">${this.currentUser.email || ''}</span>
+            </div>
+            <div class="user-menu-actions">
+                <button class="menu-action-btn profile-btn" id="open-profile-btn">
+                    ${this.getAvatarMarkup('profile-btn-avatar')}
+                    <span class="profile-btn-text">
+                        <span class="profile-btn-label">View profile</span>
+                        <span class="profile-btn-subtext">${displayName}</span>
+                    </span>
+                </button>
+                <button class="menu-action-btn logout-btn" id="menu-logout-btn">Logout</button>
+            </div>
+        `;
+
+        const openProfileBtn = document.getElementById('open-profile-btn');
+        const menuLogoutBtn = document.getElementById('menu-logout-btn');
+        if (openProfileBtn) openProfileBtn.addEventListener('click', () => this.openProfileDrawer());
+        if (menuLogoutBtn) menuLogoutBtn.addEventListener('click', () => this.logout());
+
+        requestAnimationFrame(() => userMenu.classList.remove('hidden'));
+    }
+
+    toggleUserMenu() {
+        const userMenu = document.getElementById('user-menu');
+        if (!userMenu) return;
+
+        const isHidden = userMenu.classList.contains('hidden');
+        if (isHidden) {
+            userMenu.classList.remove('hidden');
+            requestAnimationFrame(() => userMenu.classList.add('open'));
+        } else {
+            userMenu.classList.remove('open');
+            setTimeout(() => userMenu.classList.add('hidden'), 140);
+        }
+    }
+
+    closeUserMenu() {
+        const userMenu = document.getElementById('user-menu');
+        if (userMenu) {
+            userMenu.classList.remove('open');
+            setTimeout(() => userMenu.classList.add('hidden'), 140);
+        }
+    }
+
+    openProfileDrawer() {
+        const drawer = document.getElementById('profile-drawer');
+        if (!drawer) return;
+        this.closeUserMenu();
+        this.updateSimpleProfile();
+        drawer.classList.remove('hidden');
+        drawer.setAttribute('aria-hidden', 'false');
+    }
+
+    closeProfileDrawer() {
+        const drawer = document.getElementById('profile-drawer');
+        if (drawer) {
+            drawer.classList.add('hidden');
+            drawer.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    openDetailedStatsWindow() {
+        const url = 'detailed-stats.html';
+        const features = 'width=1200,height=900,resizable=yes,scrollbars=yes';
+        const win = window.open(url, '_blank', features);
+        if (win) {
+            win.focus();
+        } else {
+            this.showMessage('Pop-up blocked. Please allow pop-ups to open detailed statistics.', 'error');
+        }
+    }
+
+    async setProfilePicture(flagCode) {
+        if (!this.currentUser) return;
+        const normalized = String(flagCode || '').toLowerCase();
+        try {
+            await db.collection('users').doc(this.currentUser.uid).update({
+                profilePicture: normalized
+            });
+            this.userProfile = {
+                ...this.userProfile,
+                profilePicture: normalized
+            };
+            this.updateUserDisplay();
+            this.updateSimpleProfile();
+        } catch (error) {
+            console.error('Error updating profile picture:', error);
+        }
+    }
+
+    renderAvatarPicker() {
+        const pickerGrid = document.getElementById('avatar-picker-grid');
+        if (!pickerGrid) return;
+
+        const current = String(this.userProfile?.profilePicture || '').toLowerCase();
+        const flagsHtml = countries.map(country => {
+            const code = getFlagCodeFromUrl(country.flag);
+            if (!code) return '';
+            const selectedClass = current === code ? 'selected' : '';
+            return `
+                <button class="flag-avatar-option ${selectedClass}" data-flag-code="${code}" aria-label="Select ${country.name} as your profile picture">
+                    <img src="https://flagcdn.com/w80/${code}.png" alt="${country.name} flag" onerror="this.src='https://via.placeholder.com/80x60?text=🏁'">
+                </button>
+            `;
+        }).join('');
+
+        pickerGrid.innerHTML = flagsHtml;
+        pickerGrid.querySelectorAll('.flag-avatar-option').forEach(button => {
+            button.addEventListener('click', () => {
+                const flagCode = button.getAttribute('data-flag-code');
+                this.setProfilePicture(flagCode);
+            });
+        });
+    }
+
+    renderProfileCharts() {
+        if (typeof Chart === 'undefined') return;
+
+        const trendCanvas = document.getElementById('profile-trend-chart');
+
+        if (this._trendChart) {
+            this._trendChart.destroy();
+            this._trendChart = null;
+        }
+        if (this._practiceChart) {
+            this._practiceChart.destroy();
+            this._practiceChart = null;
+        }
+
+        const recent = (this.gameHistory || []).slice().reverse();
+        if (trendCanvas && recent.length) {
+            this._trendChart = new Chart(trendCanvas, {
+                type: 'line',
+                data: {
+                    labels: recent.map((_, index) => `Game ${index + 1}`),
+                    datasets: [{
+                        label: 'Accuracy %',
+                        data: recent.map(game => game.percentage || 0),
+                        borderColor: '#5b86e5',
+                        backgroundColor: 'rgba(91,134,229,0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#36d1dc'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: '#666' } },
+                        x: { ticks: { color: '#666' } }
+                    }
+                }
+            });
+        }
+
+
     }
 
     // Attach event listeners for detailed statistics
@@ -491,51 +810,50 @@ class UserManager {
 
 // Global functions for simple profile
 function showSimpleProfile() {
-    console.log('showSimpleProfile called');
-    const modal = document.getElementById('profile-modal');
-    if (!modal) {
-        console.log('Modal not found');
-        return;
+    if (userManager) {
+        userManager.openProfileDrawer();
     }
-    
-    if (!userManager) {
-        console.log('UserManager not found');
-        return;
-    }
-    
-    console.log('User profile:', userManager.userProfile);
-    userManager.updateSimpleProfile();
-    modal.classList.remove('hidden');
 }
 
 function closeSimpleProfile() {
-    console.log('closeSimpleProfile called');
-    const modal = document.getElementById('profile-modal');
-    if (modal) {
-        modal.classList.add('hidden');
+    if (userManager) {
+        userManager.closeProfileDrawer();
     }
 }
 
-// Ensure modal is hidden on page load
+function closeProfileDrawer() {
+    closeSimpleProfile();
+}
+
+// Ensure drawer is hidden on page load
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('profile-modal');
-    if (modal) {
-        modal.classList.add('hidden');
+    const drawer = document.getElementById('profile-drawer');
+    if (drawer) {
+        drawer.classList.add('hidden');
+        drawer.setAttribute('aria-hidden', 'true');
     }
 });
 
 // Add escape key listener
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        const modal = document.getElementById('profile-modal');
-        if (modal && !modal.classList.contains('hidden')) {
+        const drawer = document.getElementById('profile-drawer');
+        if (drawer && !drawer.classList.contains('hidden')) {
             closeSimpleProfile();
         }
     }
 });
 
+// Close the profile menu when clicking anywhere else
+document.addEventListener('click', function() {
+    if (userManager) {
+        userManager.closeUserMenu();
+    }
+});
+
 // Initialize user manager
 const userManager = new UserManager();
+window.userManager = userManager;
 
 // Global functions for onclick handlers (backup method)
 function startGame25() {

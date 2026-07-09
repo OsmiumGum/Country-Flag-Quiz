@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Flag Statistics</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        .detail-page { width: min(1200px, 100%); margin: 0 auto; }
+        .detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+        .detail-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+        .detail-legend { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0 18px; padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 16px; background: var(--secondary-bg); }
+        .legend-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-secondary); }
+        .legend-swatch { width: 14px; height: 14px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.08); }
+        .detail-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .detail-summary-card { background: var(--wrapper-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 10px 12px; box-shadow: 0 6px 12px rgba(0,0,0,0.03); }
+        .detail-summary-label { color: var(--text-secondary); font-size: 0.75rem; margin-bottom: 3px; }
+        .detail-summary-value { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+        .detail-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+        .detail-flag-row { display: flex; flex-direction: column; gap: 6px; background: var(--detail-bg, var(--secondary-bg)); border: 1px solid var(--detail-border, var(--border-color)); border-left: 7px solid var(--detail-accent, var(--primary-color)); border-radius: 14px; padding: 10px 11px; box-shadow: 0 6px 12px rgba(0,0,0,0.03); }
+        .detail-flag-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .detail-flag-info img { width: 32px; height: 22px; object-fit: cover; border-radius: 6px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+        .detail-flag-name { font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; line-height: 1.1; }
+        .detail-flag-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+        .detail-flag-percentage { font-size: 1.1rem; font-weight: 800; color: var(--detail-accent, var(--text-primary)); }
+        .detail-flag-attempts { font-size: 0.78rem; color: var(--text-secondary); }
+        .detail-bar, .detail-bar-fill { display: none; }
+        .detail-empty { text-align: center; padding: 30px 16px; color: var(--text-secondary); background: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 18px; }
+        @media (max-width: 900px) { .detail-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px) { .detail-header { flex-direction: column; align-items: stretch; } .detail-toolbar { justify-content: stretch; } .detail-toolbar button, .detail-toolbar select { width: 100%; } .detail-list { grid-template-columns: 1fr; } .detail-flag-meta { flex-direction: column; align-items: flex-start; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-wrapper detail-page">
+            <div class="detail-header">
+                <div>
+                    <p class="profile-eyebrow">Detailed statistics</p>
+                    <h1>All-time flag attempts</h1>
+                    <p>Sorted breakdown of every flag you’ve attempted, with correct counts and percentages.</p>
+                </div>
+                <div class="detail-toolbar">
+                    <select id="detail-sort">
+                        <option value="percentage-asc">Lowest percentage</option>
+                        <option value="percentage-desc">Best percentage</option>
+                        <option value="attempts-desc">Most attempts</option>
+                        <option value="attempts-asc">Fewest attempts</option>
+                        <option value="alphabetical">Alphabetical</option>
+                    </select>
+                    <button id="refresh-detail-btn">Refresh</button>
+                    <button id="close-detail-btn">Close Window</button>
+                </div>
+            </div>
+
+            <div class="detail-summary" id="detail-summary">
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Flags attempted</div>
+                    <div class="detail-summary-value" id="summary-flags">0</div>
+                </div>
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Total attempts</div>
+                    <div class="detail-summary-value" id="summary-attempts">0</div>
+                </div>
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Correct answers</div>
+                    <div class="detail-summary-value" id="summary-correct">0</div>
+                </div>
+                <div class="detail-summary-card">
+                    <div class="detail-summary-label">Overall accuracy</div>
+                    <div class="detail-summary-value" id="summary-accuracy">0%</div>
+                </div>
+            </div>
+
+            <div class="detail-legend">
+                <span class="legend-chip"><span class="legend-swatch" style="background:#dc3545"></span>Needs improvement</span>
+                <span class="legend-chip"><span class="legend-swatch" style="background:#f0ad4e"></span>Average</span>
+                <span class="legend-chip"><span class="legend-swatch" style="background:#28a745"></span>Strong</span>
+                <span class="legend-chip"><span class="legend-swatch" style="background:#1f7a3a"></span>Excellent</span>
+            </div>
+
+            <div id="detail-content" class="detail-list">
+                <div class="detail-empty">Loading your detailed statistics...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="countries.js"></script>
+    <script src="firebase-config-env.js"></script>
+    <script src="detailed-stats.js"></script>
+</body>
+</html>

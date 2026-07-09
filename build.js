@@ -8,11 +8,25 @@ function ensureDir(dirPath) {
     fs.mkdirSync(dirPath, { recursive: true });
 }
 
+<<<<<<< HEAD
 function copyFile(src, dest) {
     ensureDir(path.dirname(dest));
     fs.copyFileSync(src, dest);
     console.log(`✅ Copied ${path.relative(rootDir, src)} -> ${path.relative(rootDir, dest)}`);
 }
+=======
+// Copy all files to dist
+const filesToCopy = [
+    'index.html',
+    'detailed-stats.html',
+    'styles.css',
+    'script.js',
+    'detailed-stats.js',
+    'user-manager.js', 
+    'countries.js',
+    'server.js'
+];
+>>>>>>> origin/main
 
 function copyDir(srcDir, destDir) {
     if (!fs.existsSync(srcDir)) {
