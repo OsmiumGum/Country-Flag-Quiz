@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startMapQuizBtn.addEventListener('click', () => {
             console.log('Map Quiz Mode button clicked');
             // Open the map quiz in a new window/tab
-            window.open('map-quiz.html', '_blank', 'width=1400,height=900,resizable=yes,scrollbars=yes');
+            window.open('pages/map-quiz.html', '_blank', 'width=1400,height=900,resizable=yes,scrollbars=yes');
         });
     } else {
         console.error('start-map-quiz-btn not found');

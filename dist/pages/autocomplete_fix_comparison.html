@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Before vs After - Autocomplete Coverage Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .test-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+        }
+        .test-box.fixed {
+            border-left-color: #28a745;
+        }
+        .typing-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0;
+            position: relative;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .autocomplete-dropdown {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+        }
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .autocomplete-item:hover {
+            background-color: #f5f5f5;
+        }
+        .hidden {
+            display: none;
+        }
+        .stats {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .test-instruction {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        h3.problem {
+            color: #dc3545;
+        }
+        h3.solution {
+            color: #28a745;
+        }
+        .country-count {
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Autocomplete Coverage Fix</h1>
+        
+        <div class="test-instruction">
+            <h4>Test Instructions:</h4>
+            <p><strong>1.</strong> Type "c" in both boxes below</p>
+            <p><strong>2.</strong> Compare how many countries appear in each dropdown</p>
+            <p><strong>3.</strong> Try "s" or "a" to see the difference</p>
+        </div>
+        
+        <div class="comparison">
+            <div class="test-box">
+                <h3 class="problem">❌ Before (Limited to 10)</h3>
+                <div class="typing-input-wrapper">
+                    <input type="text" id="input-before" placeholder="Type 'c' to see the problem..." autocomplete="off">
+                    <div class="autocomplete-dropdown hidden" id="dropdown-before"></div>
+                </div>
+                <div class="stats">
+                    Showing: <span id="count-before">0</span> countries
+                </div>
+                <div class="country-count" id="details-before"></div>
+            </div>
+            
+            <div class="test-box fixed">
+                <h3 class="solution">✅ After (Dynamic Limit)</h3>
+                <div class="typing-input-wrapper">
+                    <input type="text" id="input-after" placeholder="Type 'c' to see improvement..." autocomplete="off">
+                    <div class="autocomplete-dropdown hidden" id="dropdown-after"></div>
+                </div>
+                <div class="stats">
+                    Showing: <span id="count-after">0</span> countries
+                </div>
+                <div class="country-count" id="details-after"></div>
+            </div>
+        </div>
+        
+        <div style="background: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>🎯 The Solution:</h3>
+            <ul>
+                <li><strong>1 character:</strong> Show up to 25 countries (vs 10 before)</li>
+                <li><strong>2 characters:</strong> Show up to 20 countries (vs 10 before)</li>
+                <li><strong>3+ characters:</strong> Show all matches, max 15 (vs 10 before)</li>
+            </ul>
+            <p><strong>Result:</strong> Now players can find ALL countries in the autocomplete suggestions!</p>
+        </div>
+        
+        <div style="background: #e7f3ff; padding: 15px; border-radius: 8px;">
+            <h4>Countries starting with common letters:</h4>
+            <div id="letter-stats"></div>
+        </div>
+    </div>
+
+    <script>
+        // Sample countries (same as in the game)
+        const countries = [
+            "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+        ];
+        
+        // OLD implementation (limited to 10)
+        function filterCountriesOld(input) {
+            if (!input.trim()) return [];
+            
+            const searchTerm = input.toLowerCase().trim();
+            return countries
+                .filter(name => name.toLowerCase().includes(searchTerm))
+                .sort((a, b) => {
+                    const aLower = a.toLowerCase();
+                    const bLower = b.toLowerCase();
+                    const aStartsWith = aLower.startsWith(searchTerm);
+                    const bStartsWith = bLower.startsWith(searchTerm);
+                    
+                    if (aStartsWith && !bStartsWith) return -1;
+                    if (!aStartsWith && bStartsWith) return 1;
+                    return aLower.localeCompare(bLower);
+                })
+                .slice(0, 10); // OLD: Always limited to 10
+        }
+        
+        // NEW implementation (dynamic limit)
+        function filterCountriesNew(input) {
+            if (!input.trim()) return [];
+            
+            const searchTerm = input.toLowerCase().trim();
+            const allMatches = countries
+                .filter(name => name.toLowerCase().includes(searchTerm))
+                .sort((a, b) => {
+                    const aLower = a.toLowerCase();
+                    const bLower = b.toLowerCase();
+                    const aStartsWith = aLower.startsWith(searchTerm);
+                    const bStartsWith = bLower.startsWith(searchTerm);
+                    
+                    if (aStartsWith && !bStartsWith) return -1;
+                    if (!aStartsWith && bStartsWith) return 1;
+                    return aLower.localeCompare(bLower);
+                });
+            
+            // NEW: Dynamic limit
+            let limit;
+            if (searchTerm.length === 1) {
+                limit = 25;
+            } else if (searchTerm.length === 2) {
+                limit = 20;
+            } else {
+                limit = Math.min(allMatches.length, 15);
+            }
+            
+            return allMatches.slice(0, limit);
+        }
+        
+        // Setup event handlers
+        function setupInput(inputId, dropdownId, countId, detailsId, filterFunction) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            const count = document.getElementById(countId);
+            const details = document.getElementById(detailsId);
+            
+            input.addEventListener('input', (e) => {
+                const value = e.target.value;
+                
+                if (value.trim()) {
+                    const matches = filterFunction(value);
+                    
+                    if (matches.length > 0) {
+                        dropdown.innerHTML = matches.map(country => 
+                            `<div class="autocomplete-item">${country}</div>`
+                        ).join('');
+                        dropdown.classList.remove('hidden');
+                    } else {
+                        dropdown.classList.add('hidden');
+                    }
+                    
+                    count.textContent = matches.length;
+                    
+                    // Get total possible matches
+                    const totalMatches = countries.filter(name => 
+                        name.toLowerCase().includes(value.toLowerCase())
+                    ).length;
+                    
+                    details.innerHTML = `Total matches: ${totalMatches} | Limit: ${matches.length === totalMatches ? 'All shown' : 'Limited'}`;
+                } else {
+                    dropdown.classList.add('hidden');
+                    count.textContent = '0';
+                    details.innerHTML = '';
+                }
+            });
+        }
+        
+        // Initialize both inputs
+        setupInput('input-before', 'dropdown-before', 'count-before', 'details-before', filterCountriesOld);
+        setupInput('input-after', 'dropdown-after', 'count-after', 'details-after', filterCountriesNew);
+        
+        // Show statistics for common letters
+        const commonLetters = ['a', 'b', 'c', 's', 'm', 'g'];
+        const stats = commonLetters.map(letter => {
+            const count = countries.filter(name => name.toLowerCase().startsWith(letter)).length;
+            return `<strong>${letter.toUpperCase()}:</strong> ${count} countries`;
+        }).join(' | ');
+        
+        document.getElementById('letter-stats').innerHTML = stats;
+    </script>
+</body>
+</html>

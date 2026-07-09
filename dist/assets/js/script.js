@@ -15,6 +15,39 @@ const scoreSpan = document.getElementById('score');
 const finalScoreSpan = document.getElementById('final-score');
 const feedbackMessage = document.getElementById('feedback-message');
 const progressFill = document.getElementById('progress-fill');
+const themeToggle = document.getElementById('theme-toggle');
+
+// Dark Mode Functionality
+function initTheme() {
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+}
+
+// Initialize theme on page load
+initTheme();
+
+// Add event listener to theme toggle button
+if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+}
 
 // Game variables
 let quiz = [];
@@ -623,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startMapQuizBtn.addEventListener('click', () => {
             console.log('Map Quiz Mode button clicked');
             // Open the map quiz in a new window/tab
-            window.open('map-quiz.html', '_blank', 'width=1400,height=900,resizable=yes,scrollbars=yes');
+            window.open('pages/map-quiz.html', '_blank', 'width=1400,height=900,resizable=yes,scrollbars=yes');
         });
     } else {
         console.error('start-map-quiz-btn not found');

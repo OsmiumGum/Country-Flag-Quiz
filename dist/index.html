@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Country Flag Quiz</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6836833427548912"
+     crossorigin="anonymous"></script>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -15,7 +17,12 @@
 <body>
     <div class="container">
         <div class="quiz-wrapper">
-            <h1>Country Flag Quiz</h1>
+            <div class="header-controls">
+                <h1>Country Flag Quiz</h1>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
             
             <!-- Authentication Screen -->
             <div id="auth-screen" class="hidden">
@@ -143,9 +150,9 @@
         </div>
     </div>
 
-    <script src="countries.js"></script>
-    <script src="firebase-config-env.js"></script>
-    <script src="user-manager.js"></script>
-    <script src="script.js"></script>
+    <script src="assets/js/countries.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/user-manager.js"></script>
+    <script src="assets/js/script.js"></script>
 </body>
 </html>

@@ -1,62 +1,62 @@
 const fs = require('fs');
 const path = require('path');
 
-// Create dist directory
-if (!fs.existsSync('dist')) {
-    fs.mkdirSync('dist');
+const rootDir = process.cwd();
+const distDir = path.join(rootDir, 'dist');
+
+function ensureDir(dirPath) {
+    fs.mkdirSync(dirPath, { recursive: true });
 }
 
-// Copy all files to dist
-const filesToCopy = [
-    'index.html',
-    'styles.css',
-    'script.js',
-    'user-manager.js', 
-    'countries.js',
-    'server.js'
-];
+function copyFile(src, dest) {
+    ensureDir(path.dirname(dest));
+    fs.copyFileSync(src, dest);
+    console.log(`✅ Copied ${path.relative(rootDir, src)} -> ${path.relative(rootDir, dest)}`);
+}
 
-console.log('📁 Copying files to dist...');
-
-filesToCopy.forEach(file => {
-    let content = fs.readFileSync(file, 'utf8');
-    
-    // Replace firebase config import in HTML
-    if (file === 'index.html') {
-        content = content.replace(
-            'src="firebase-config.js"',
-            'src="firebase-config-env.js"'
-        );
+function copyDir(srcDir, destDir) {
+    if (!fs.existsSync(srcDir)) {
+        console.warn(`⚠️ Skipping missing directory: ${path.relative(rootDir, srcDir)}`);
+        return;
     }
-    
-    fs.writeFileSync(path.join('dist', file), content);
-    console.log(`✅ Copied ${file}`);
-});
 
-// Copy firebase config with environment variables
-let firebaseConfigContent = fs.readFileSync('firebase-config-env.js', 'utf8');
+    ensureDir(destDir);
+    for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+        const srcPath = path.join(srcDir, entry.name);
+        const destPath = path.join(destDir, entry.name);
 
-// Replace placeholders with environment variables (for build-time injection)
-const envVars = {
-    'FIREBASE_API_KEY': process.env.FIREBASE_API_KEY,
-    'FIREBASE_AUTH_DOMAIN': process.env.FIREBASE_AUTH_DOMAIN,
-    'FIREBASE_PROJECT_ID': process.env.FIREBASE_PROJECT_ID,
-    'FIREBASE_STORAGE_BUCKET': process.env.FIREBASE_STORAGE_BUCKET,
-    'FIREBASE_MESSAGING_SENDER_ID': process.env.FIREBASE_MESSAGING_SENDER_ID,
-    'FIREBASE_APP_ID': process.env.FIREBASE_APP_ID,
-    'FIREBASE_MEASUREMENT_ID': process.env.FIREBASE_MEASUREMENT_ID
-};
-
-// Replace placeholders if environment variables are available
-Object.keys(envVars).forEach(key => {
-    if (envVars[key]) {
-        const placeholder = `{{${key}}}`;
-        firebaseConfigContent = firebaseConfigContent.replace(placeholder, envVars[key]);
+        if (entry.isDirectory()) {
+            copyDir(srcPath, destPath);
+        } else {
+            copyFile(srcPath, destPath);
+        }
     }
-});
+}
 
-fs.writeFileSync(path.join('dist', 'firebase-config-env.js'), firebaseConfigContent);
-console.log('✅ Copied firebase-config-env.js');
+function cleanDist() {
+    if (fs.existsSync(distDir)) {
+        fs.rmSync(distDir, { recursive: true, force: true });
+    }
+    ensureDir(distDir);
+}
+
+console.log('📁 Building site into /dist...');
+cleanDist();
+
+// Copy root entry point and shared static folders
+copyFile(path.join(rootDir, 'index.html'), path.join(distDir, 'index.html'));
+copyDir(path.join(rootDir, 'assets'), path.join(distDir, 'assets'));
+copyDir(path.join(rootDir, 'pages'), path.join(distDir, 'pages'));
+copyDir(path.join(rootDir, 'images'), path.join(distDir, 'images'));
+
+// Copy any other standalone assets that live at the root and are intended for deployment.
+const extraRootFiles = ['netlify.toml'];
+for (const file of extraRootFiles) {
+    const src = path.join(rootDir, file);
+    if (fs.existsSync(src)) {
+        copyFile(src, path.join(distDir, file));
+    }
+}
 
 console.log('\n🎉 Build complete! Files ready in /dist directory');
-console.log('📤 Ready to deploy to Netlify/Vercel with environment variables');
+console.log('📤 Static pages are preserved under /pages and shared assets under /assets');
