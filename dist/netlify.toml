@@ -1,0 +1,19 @@
+# Netlify Configuration
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Environment variables will be set in Netlify dashboard
+# FIREBASE_API_KEY = your-actual-api-key
+# FIREBASE_AUTH_DOMAIN = flag-quiz-game-7745f.firebaseapp.com
+# FIREBASE_PROJECT_ID = flag-quiz-game-7745f
+# FIREBASE_STORAGE_BUCKET = flag-quiz-game-7745f.firebasestorage.app
+# FIREBASE_MESSAGING_SENDER_ID = 734673677166
+# FIREBASE_APP_ID = 1:734673677166:web:26b9c3e0e681d957842f7f
+# FIREBASE_MEASUREMENT_ID = G-7MR7SHQ1MD
+
+# Redirect rules
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

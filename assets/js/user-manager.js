@@ -43,7 +43,7 @@ class UserManager {
         demoNotice.innerHTML = `
             <p>🎮 <strong>Demo Mode</strong> - User accounts are disabled</p>
             <p>Your scores won't be saved, but you can still play both game modes!</p>
-            <p><small>To enable accounts: Configure Firebase in firebase-config.js</small></p>
+            <p><small>To enable accounts: Configure Firebase in assets/js/firebase-config.js</small></p>
         `;
         startScreen.insertBefore(demoNotice, startScreen.firstChild);
     }

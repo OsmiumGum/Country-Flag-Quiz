@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flag Performance</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-wrapper detail-page">
+            <div class="detail-header">
+                <div>
+                    <p class="profile-eyebrow">Player profile</p>
+                    <h1>Detailed Flag Statistics</h1>
+                    <p>Track performance across every country you've practiced.</p>
+                </div>
+            </div>
+
+            <div class="detail-summary" id="summary-cards"></div>
+            <div class="focus-panel" id="focus-panel">
+                <div class="focus-panel-head">
+                    <h2>What to practice next</h2>
+                    <p class="focus-panel-sub">Your weakest countries will appear here.</p>
+                </div>
+                <div id="focus-list" class="focus-scroller"></div>
+            </div>
+            <div class="detail-controls">
+                <input id="search-input" class="detail-search" placeholder="Search countries..." />
+                <select id="sort-select" class="detail-sort">
+                    <option value="percentage-desc">Best performance</option>
+                    <option value="attempts-desc">Most practiced</option>
+                    <option value="percentage-asc">Needs practice</option>
+                    <option value="alphabetical">Alphabetical</option>
+                </select>
+            </div>
+            <div id="detail-list" class="detail-list"></div>
+        </div>
+    </div>
+
+    <script src="../assets/js/countries.js"></script>
+    <script src="../assets/js/firebase-config.js"></script>
+    <script src="../assets/js/user-manager.js"></script>
+</body>
+</html>
