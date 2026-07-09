@@ -492,7 +492,8 @@ function showResults() {
     
     // Record game completion for logged-in users
     if (userManager.currentUser) {
-        userManager.updateGameCompletion(score, questionsAnswered);
+        const modeName = isUnlimitedMode ? (isTypingMode ? 'Unlimited Typing Mode' : 'Unlimited Mode') : (isTypingMode ? 'Typing Mode (25 Questions)' : '25 Questions Mode');
+        userManager.updateGameCompletion(score, questionsAnswered, modeName);
     }
     
     // Display feedback message
